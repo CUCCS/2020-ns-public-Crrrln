@@ -75,7 +75,7 @@ ip link show eth0
 ```
 # 回到攻击者主机上的 scapy 交互式终端继续执行命令
 # 观察两次命令的输出结果差异
-pkt = promiscping("192.168.0.102")
+pkt = promiscping("172.16.111.117")
 ```
 
 ![](./img/比较差异.PNG)
