@@ -5,8 +5,9 @@
 掌握网络扫描之端口状态探测的基本原理
 
 ### **实验环境**
-- python + [scapy](https://scapy.net/)
-- nmap
+- python 3.8.4
+-  [scapy](https://scapy.net/) 2.4.3
+- nmap 7.80
 
 ### **网络拓扑**
 
@@ -30,10 +31,10 @@
     - 关闭⛔
     - 被过滤⚠
 - 控制端口状态
-    ```
+    ```bash
     #安装ufw
     sudo apt install ufw
-    #端口开启状态
+    #允许端口访问
     sudo ufw enable && ufw allow portno/tcp(udp)
     #端口过滤状态
     sudo ufw enable && ufw deny portno/tcp(udp)
@@ -53,27 +54,8 @@
 
 **代码**
 
-```
-#! /usr/bin/python
+[tcp_connect_scan.py](code/tcp_connect_scan.py)
 
-from scapy.all import *
-
-dst_ip = "172.16.111.117"
-src_port = RandShort()
-dst_port=8083
-
-tcpconnectscan_pkts = sr1(IP(dst=dst_ip)/TCP(sport=src_port,dport=dst_port,flags="S"),timeout=10)
-#if(str(type(tcpconnectscan_pkts))=="<type 'NoneType'>"):
-if tcpconnectscan_pkts is None:
-    print("Filtered")
-elif(tcpconnectscan_pkts.haslayer(TCP)):
-    if(tcpconnectscan_pkts.getlayer(TCP).flags == 0x12):
-        #send_rst = sr(IP(dst=dst_ip)/TCP(sport=src_port,dport=dst_port,flags="AR"),timeout=10)
-        print("Open")
-    elif (tcpconnectscan_pkts.getlayer(TCP).flags == 0x14):
-        print("Closed")
-
-```
 **实验结果**
 
 **closed**
@@ -137,33 +119,7 @@ kali-attacker
 
 **代码**
 
-```
-#! /usr/bin/python
-
-import logging
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-
-from scapy.all import *
-
-dst_ip = "172.16.111.117"
-src_port = RandShort()
-dst_port = 8083
-
-tcpstealthscan_pkts = sr1(
-    IP(dst=dst_ip)/TCP(sport=src_port, dport=dst_port, flags="S"), timeout=10)
-if tcpstealthscan_pkts is None:
-    print("Filtered")
-elif(tcpstealthscan_pkts.haslayer(TCP)):
-    if(tcpstealthscan_pkts.getlayer(TCP).flags == 0x12):
-        send_rst = sr(IP(dst=dst_ip)/TCP(sport=src_port,dport=dst_port, flags="R"), timeout=10)
-        print("Open")
-    elif (tcpstealthscan_pkts.getlayer(TCP).flags == 0x14):
-        print("Closed")
-elif(tcpstealthscan_pkts.haslayer(ICMP)):
-    if(int(tcpstealthscan_pkts.getlayer(ICMP).type) == 3 and int(tcpstealthscan_pkts.getlayer(ICMP).code) in [1, 2, 3, 9, 10, 13]):
-        print("Filtered")
-
-```
+[TCP_stealth_scan.py](code/TCP_stealth_scan.py)
 
 
 **实验结果**
@@ -224,38 +180,18 @@ kali-attacker
 
 分析：接收到的是SYN/ACK数据包，证明端口处于开启状态✅，与预期相符
 
-
 **3.TCP Xmas scan**
 
 **实验预期**
 
 Xmas 发送一个 TCP 包，并对 TCP 报文头 FIN、URG 和 PUSH 标记进行设置。若是关闭的端口则响应 RST 报文；开放或过滤状态下的端口则无任何响应。
 
-
 **代码**
-```
-#! /usr/bin/python
 
-import logging
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+[TCP_Xmas_scan.py](code/TCP_Xmas_scan.py)
 
-from scapy.all import *
 
-dst_ip = "172.16.111.117"
-src_port = RandShort()
-dst_port = 8083
 
-tcpxmasscan_pkts = sr1(
-    IP(dst=dst_ip)/TCP(dport=dst_port, flags="FPU"), timeout=10)
-if tcpxmasscan_pkts is None:
-    print("Open|Filtered")
-elif(tcpxmasscan_pkts.haslayer(TCP)):
-    if(tcpxmasscan_pkts.getlayer(TCP).flags == 0x14):
-        print("Closed")
-elif(tcpxmasscan_pkts.haslayer(ICMP)):
-    if(int(tcpxmasscan_pkts.getlayer(ICMP).type) == 3 and int(tcpxmasscan_pkts.getlayer(ICMP).code) in [1, 2, 3, 9, 10, 13]):
-        print("Filtered") 
-```
 **实验结果**
 
 
@@ -308,7 +244,6 @@ kali-attacker
 
 分析：只收到了一个TCP包，且靶机没有响应，证明端口处于开启状态✅，与预期相符
 
-
 **4.TCP fin scan**
 
 **实验预期**
@@ -316,29 +251,10 @@ kali-attacker
 仅发送 FIN 包，它可以直接通过防火墙，如果端口是关闭的就会回复一个 RST 包，如果端口是开放或过滤状态则对 FIN 包没有任何响应。
 
 **代码**
-```
-#! /usr/bin/python
 
-import logging
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+[TCP_fin_scan.py](code/TCP_fin_scan.py)
 
-from scapy.all import *
 
-dst_ip = "172.16.111.117"
-src_port = RandShort()
-dst_port = 8083
-
-tcpfinscan_pkts = sr1(
-    IP(dst=dst_ip)/TCP(dport=dst_port, flags="F"), timeout=10)
-if tcpfinscan_pkts is None:
-    print("Open|Filtered")
-elif(tcpfinscan_pkts.haslayer(TCP)):
-    if(tcpfinscan_pkts.getlayer(TCP).flags == 0x14):
-        print("Closed")
-elif(tcpfinscan_pkts.haslayer(ICMP)):
-    if(int(tcpfinscan_pkts.getlayer(ICMP).type) == 3 and int(tcpfinscan_pkts.getlayer(ICMP).code) in [1, 2, 3, 9, 10, 13]):
-        print("Filtered")
-```
 
 **实验结果**
 
@@ -399,30 +315,10 @@ kali-attacker
 发送一个 TCP 数据包，关闭所有 TCP 报文头标记。只有关闭的端口会发送 RST 响应。
 
 **代码**
-```
-#! /usr/bin/python
 
-import logging
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+[TCP_null_scan.py](code/TCP_null_scan.py)
 
-from scapy.all import *
 
-dst_ip = "172.16.111.117"
-src_port = RandShort()
-dst_port = 8083
-
-tcpnullscan_pkts = sr1(
-    IP(dst=dst_ip)/TCP(dport=dst_port, flags=""), timeout=10)
-if tcpnullscan_pkts is None:
-    print("Open|Filtered")
-elif(tcpnullscan_pkts.haslayer(TCP)):
-    if(tcpnullscan_pkts.getlayer(TCP).flags == 0x14):
-        print("Closed")
-elif(tcpnullscan_pkts.haslayer(ICMP)):
-    if(int(tcpnullscan_pkts.getlayer(ICMP).type) == 3 and int(tcpnullscan_pkts.getlayer(ICMP).code) in [1, 2, 3, 9, 10, 13]):
-        print("Filtered")
-
-```
 
 **实验结果**
 
@@ -482,35 +378,10 @@ kali-attacker
 大多数 UDP 端口扫描的方法就是向各个被扫描的 UDP 端口发送零字节的 UDP 数据包，如果收到一个 ICMP 不可到达的回应，那么则认为这个端口是关闭的,对于没有回应的端口则认为是开放的，但是如果目标主机安装有防火墙或其它可以过滤数据包的软硬件,那我们发出 UDP 数据包后,将可能得不到任何回应,我们将会见到所有的被扫描端口都是开放的。
 
 **代码**
-```
-#! /usr/bin/python
 
-import logging
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+[UDP_scan.py](code/UDP_scan.py)
 
-from scapy.all import *
 
-dst_ip = "172.16.111.117"
-src_port = RandShort()
-dst_port = 53
-dst_timeout = 10
-
-def udp_scan(dst_ip,dst_port,dst_timeout):
-    udp_scan_resp = sr1(IP(dst=dst_ip)/UDP(dport=dst_port), timeout=dst_timeout)
-    if(udp_scan_resp is None):
-        print("Open|Filtered")
-    elif(udp_scan_resp.haslayer(UDP)):
-        print("Open")
-    elif(udp_scan_resp.haslayer(ICMP)):
-        if(int(udp_scan_resp.getlayer(ICMP).type) == 3 and int(udp_scan_resp.getlayer(ICMP).code) == 3):
-            print("Closed")
-        elif(int(udp_scan_resp.getlayer(ICMP).type) == 3 and int(udp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]):
-            print("Filtered")
-        elif(udp_scan_resp.haslayer(IP) and udp_scan_resp.getlayer(IP).proto == IP_PROTOS.udp)
-            print("Open")
-
-udp_scan(dst_ip,dst_port,dst_timeout)
-```
 
 
 **实验结果**
