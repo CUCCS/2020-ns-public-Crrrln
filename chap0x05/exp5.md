@@ -54,7 +54,7 @@
 
 **代码**
 
-[tcp_connect_scan.py](code/tcp_connect_scan.py)
+[tcp_connect_scan.py](./code/tcp_connect_scan.py)
 
 **实验结果**
 
@@ -119,7 +119,7 @@ kali-attacker
 
 **代码**
 
-[TCP_stealth_scan.py](code/TCP_stealth_scan.py)
+[TCP_stealth_scan.py](./code/TCP_stealth_scan.py)
 
 
 **实验结果**
@@ -188,7 +188,7 @@ Xmas 发送一个 TCP 包，并对 TCP 报文头 FIN、URG 和 PUSH 标记进行
 
 **代码**
 
-[TCP_Xmas_scan.py](code/TCP_Xmas_scan.py)
+[TCP_Xmas_scan.py](./code/TCP_Xmas_scan.py)
 
 
 
@@ -252,7 +252,7 @@ kali-attacker
 
 **代码**
 
-[TCP_fin_scan.py](code/TCP_fin_scan.py)
+[TCP_fin_scan.py](./code/TCP_fin_scan.py)
 
 
 
@@ -316,7 +316,7 @@ kali-attacker
 
 **代码**
 
-[TCP_null_scan.py](code/TCP_null_scan.py)
+[TCP_null_scan.py](./code/TCP_null_scan.py)
 
 
 
@@ -379,7 +379,7 @@ kali-attacker
 
 **代码**
 
-[UDP_scan.py](code/UDP_scan.py)
+[UDP_scan.py](./code/UDP_scan.py)
 
 
 
